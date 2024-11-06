@@ -1,0 +1,118 @@
+---
+title: "Community Contribution"
+author: Marguerite Genereux (mg4778)
+format:
+  html:
+    embed-resources: true
+execute: 
+  echo: true
+---
+
+## EIA Package Demo Code
+
+```{r}
+library(eia)
+library(ggplot2)
+
+#Set up API key
+eia_set_key("88yvcxdEry5nj4uFhM404FOhAN37Hcjcj0QaQWiA")
+
+# Explore EIA directory
+eia_dir()  # List top-level directories
+eia_dir("electricity/retail-sales")  # Navigate to retail sales data
+eia_metadata("electricity/retail-sales")
+eia_facets("electricity/retail-sales", "sectorid")
+
+#Pull Data
+data <- eia_data(
+  dir = "electricity/retail-sales",
+  data = c("sales", "price"),
+  facets = list(sectorid = c("RES", "COM"), stateid = "NY"),
+  freq = "monthly",
+  start = "2013",
+  end = "2023",
+  sort = list(cols = c("period", "sectorid"), order = "asc")
+)
+
+filtered_data <- data |> 
+  mutate(
+    period = eiadate_to_date(period),  # Convert 'period' to Date using eiadate_to_date()
+    sales = as.numeric(sales),         #'sales' is numeric
+    price = as.numeric(price)          #'price' is numeric
+  )
+
+# Plot Sales Data Over Time
+ggplot(filtered_data, aes(x = period, y = sales, color = sectorid)) +
+  geom_line(linewidth = 1) +  # Use linewidth instead of size
+  labs(
+    title = "Monthly Electricity Sales in New York (2013-2023)",
+    x = "Date",
+    y = "Sales (MWh)",
+    color = "Sector"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Plot Price Data Over Time
+ggplot(filtered_data, aes(x = period, y = price, color = sectorid)) +
+  geom_line(linewidth = 1) +  
+  labs(
+    title = "Monthly Electricity Price in New York (2013-2023)",
+    x = "Date",
+    y = "Price (USD/MWh)",
+    color = "Sector"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+library(eia)
+library(ggplot2)
+library(dplyr)
+library(readr)
+
+
+# Set up and store API key
+eia_set_key("88yvcxdEry5nj4uFhM404FOhAN37Hcjcj0QaQWiA")
+
+# Step 1: Retrieve Crude Oil Imports Data for Canada to the U.S.
+# Adjust originId and destinationId as necessary for other countries or regions.
+crude_oil_data <- eia_data(
+  dir = "crude-oil-imports",
+  data = "quantity",                        # Quantity in thousand barrels
+  freq = "monthly",                         # Monthly data
+  start = "2020-01",                        
+  end = "2023-12",                        
+  facets = list(
+     originId = "CTY_CA",                       # Canada as country of origin
+     destinationType = "PP",                # Type of crude oil and destination
+     gradeId = "MED",
+     destinationId = "PP_4"
+   )
+)
+
+# Convert quantity to numeric
+crude_oil_data$quantity <- parse_number(crude_oil_data$quantity)
+# Convert period to Date format (using eiadate_to_date)
+crude_oil_data <- crude_oil_data |> 
+  mutate(period = eiadate_to_date(period))
+
+# Plotting Crude Oil Imports Data Over Time
+library(ggplot2)
+ggplot(crude_oil_data, aes(x = period, y = quantity)) +
+  geom_bar(col = "steelblue", fill = "steelblue", stat = "identity") +
+  theme_bw() +
+  labs(
+    title = "Monthly Crude Oil Imports from Canada to the U.S. (2018-2023)",
+    x = "Year", y = "Quantity (Thousand Barrels)"
+  )+
+  theme_minimal() 
+
+# Reset the results of API calls that are currently cached in memory
+eia_clear_cache()
+eia_clear_dir()
+eia_clear_metadata()
+eia_clear_data()
+eia_clear_facets()
+```
