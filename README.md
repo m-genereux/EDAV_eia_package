@@ -1,0 +1,12 @@
+Additional demo code for the 'eia' r package, with usage of:
+eia_set_key()
+eia_dir() 
+eia_data()
+eia_metadata()
+eia_facets()
+eiadate_to_date()
+eia_clear_cache()
+eia_clear_dir()
+eia_clear_metadata()
+eia_clear_data()
+eia_clear_facets()
